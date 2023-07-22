@@ -40,7 +40,7 @@ async def create(request: schemas.AddUser, db: Session = Depends(get_db)):
 
 @app.get("/users",status_code=status.HTTP_200_OK,response_model=List[schemas.ShowUser], tags=["users"])
 async def getUsers(db: Session = Depends(get_db)):
-    userList = db.query(models.User).all()
+    userList = db.query(models.User).outerjoin(models.RoleUser, models.User.id==models.RoleUser.user_id).all()
     if not userList:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No user until now!")
     return userList
@@ -77,3 +77,21 @@ async def update_user(id: str, request: schemas.User, db: Session = Depends(get_
         return {"Data": f"User with {id} successfully updated"}
     else:
         return {"Data": f"User with {id} not found"}
+
+# Store role
+@app.post("/roles", status_code=status.HTTP_202_ACCEPTED, tags=['Roles'])
+async def createRole(request: schemas.showRoles, db: Session=Depends(get_db)):
+    role = models.Role(name=request.name)
+    db.add(role)
+    db.commit()
+    db.refresh(role)
+    return {"data": role}
+
+# Get roles
+@app.get("/roles", status_code=status.HTTP_200_OK, response_model=List[schemas.showRoles], tags=["Roles"])
+async def getRoles(db: Session=Depends(get_db)):
+    roles = db.query(models.Role).all()
+    if not roles:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No roles available")
+    return roles
+

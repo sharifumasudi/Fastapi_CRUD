@@ -4,7 +4,8 @@ from typing import Optional
 class Role(BaseModel):
     id: str
     name: str
-    description: str
+class showRoles(BaseModel):
+    name: str
 
 class User(BaseModel):
     id: Optional[str] = None
