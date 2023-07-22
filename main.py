@@ -1,5 +1,5 @@
-from fastapi import FastAPI, Depends, Response, status, HTTPException
-from typing import List
+from fastapi import FastAPI, Depends, Response, status, HTTPException, Cookie
+from typing import List, Annotated
 from datetime import datetime
 from sql_db import schemas, models
 from sqlalchemy.orm import Session
@@ -20,10 +20,10 @@ def get_db():
         db.close()
 
 @app.get("/")
-async def index():
-    return {"data": {"name": "Sharifu", "email": "sharifumasudi66@gmail.com", "created_at": datetime.now()}}
+async def index(ads_id: Annotated[str | None, Cookie()] = None):
+    return {"data": ads_id}
 
-@app.post("/user", tags=["users"], status_code=status.HTTP_200_OK, response_model=schemas.AddUser)
+@app.post("/api/v1/user", tags=["users"], status_code=status.HTTP_200_OK, response_model=schemas.AddUser)
 async def create(request: schemas.AddUser, db: Session = Depends(get_db)):
     salt = bcrypt.gensalt()
     new_user = models.User(
@@ -39,7 +39,7 @@ async def create(request: schemas.AddUser, db: Session = Depends(get_db)):
     return new_user
 
 # Get users
-@app.get("/users",status_code=status.HTTP_200_OK,response_model=List[schemas.ShowUser], tags=["users"])
+@app.get("/api/v1/users",status_code=status.HTTP_200_OK,response_model=List[schemas.ShowUser], tags=["users"])
 async def getUsers(db: Session = Depends(get_db)):
     userList = db.query(models.User).outerjoin(models.RoleUser, models.User.id==models.RoleUser.user_id).all()
     if not userList:
@@ -47,7 +47,7 @@ async def getUsers(db: Session = Depends(get_db)):
     return userList
 
 # Get single user
-@app.get("/users/{id}", status_code=200, tags=["users"])
+@app.get("/api/v1/users/{id}", status_code=200, tags=["users"])
 async def getUser(id: str, response: Response, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == id).first()
     if not user:
@@ -55,14 +55,14 @@ async def getUser(id: str, response: Response, db: Session = Depends(get_db)):
     return {"data": user}
 
 # Delete user
-@app.delete("/user/{id}", tags=["users"])
+@app.delete("/api/v1/user/{id}", tags=["users"])
 async def delete(id: str, db: Session = Depends(get_db)):
     db.query(models.User).filter(models.User.id == id).delete(synchronize_session=False)
     db.commit()
     return {"user with id": f"{id} Deleted!"}
 
 # update user
-@app.put("/user/{id}", status_code=status.HTTP_202_ACCEPTED, tags=["users"])
+@app.put("/api/v1/user/{id}", status_code=status.HTTP_202_ACCEPTED, tags=["users"])
 async def update_user(id: str, request: schemas.User, db: Session = Depends(get_db)):
     # Get the user from the database
     user = db.query(models.User).filter(models.User.id == id).first()
@@ -83,7 +83,7 @@ async def update_user(id: str, request: schemas.User, db: Session = Depends(get_
         return {"Data": f"User with {id} not found"}
 
 # Store role
-@app.post("/roles", status_code=status.HTTP_202_ACCEPTED, tags=['Roles'])
+@app.post("/api/v1/roles", status_code=status.HTTP_202_ACCEPTED, tags=['Roles'])
 async def createRole(request: schemas.showRoles, db: Session=Depends(get_db)):
     role = models.Role(name=request.name)
     db.add(role)
@@ -92,7 +92,7 @@ async def createRole(request: schemas.showRoles, db: Session=Depends(get_db)):
     return {"data": role}
 
 # Get roles
-@app.get("/roles", status_code=status.HTTP_200_OK, response_model=List[schemas.showRoles], tags=["Roles"])
+@app.get("/api/v1/roles", status_code=status.HTTP_200_OK, response_model=List[schemas.showRoles], tags=["Roles"])
 async def getRoles(db: Session=Depends(get_db)):
     roles = db.query(models.Role).all()
     if not roles:

@@ -6,7 +6,7 @@ import uuid
 class Role(Base):
     __tablename__ = "roles"
     id = Column(String(36), primary_key=True, index=True, nullable=False, default=lambda:str(uuid.uuid4()), unique=True)
-    name = Column(String(36))
+    name = Column(String(36), unique=True, index=True)
 
 class User(Base):
     __tablename__ = "users"
@@ -14,7 +14,7 @@ class User(Base):
     firstname = Column(String(50))
     lastname = Column(String(50))
     phone = Column(String(14))
-    email = Column(String(50))
+    email = Column(String(50), unique=True, index=True)
     password = Column(String(500))
     userRole = relationship("RoleUser", back_populates="user")
 
@@ -28,7 +28,7 @@ class RoleUser(Base):
 class Clinic_Category(Base):
     __tablename__ = "clinic_categories"
     id = Column(String(36), primary_key=True, index=True, default=lambda: str(uuid.uuid4(), unique=True, nullable=False))
-    name = Column(String(50), index=True)
+    name = Column(String(50), index=True, unique=True)
     description = Column(String(500), nullable=True)
 
     clinic_category = relationship("Clinic", back_populates="category")
