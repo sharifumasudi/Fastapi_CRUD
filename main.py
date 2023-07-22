@@ -57,6 +57,9 @@ async def getUser(id: str, response: Response, db: Session = Depends(get_db)):
 # Delete user
 @app.delete("/api/v1/user/{id}", tags=["users"])
 async def delete(id: str, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"user of ID: {id} not found! process cancelled")
     db.query(models.User).filter(models.User.id == id).delete(synchronize_session=False)
     db.commit()
     return {"user with id": f"{id} Deleted!"}
