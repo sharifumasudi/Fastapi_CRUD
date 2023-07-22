@@ -38,6 +38,7 @@ async def create(request: schemas.AddUser, db: Session = Depends(get_db)):
     db.refresh(new_user)
     return new_user
 
+# Get users
 @app.get("/users",status_code=status.HTTP_200_OK,response_model=List[schemas.ShowUser], tags=["users"])
 async def getUsers(db: Session = Depends(get_db)):
     userList = db.query(models.User).outerjoin(models.RoleUser, models.User.id==models.RoleUser.user_id).all()
@@ -45,6 +46,7 @@ async def getUsers(db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No user until now!")
     return userList
 
+# Get single user
 @app.get("/users/{id}", status_code=200, tags=["users"])
 async def getUser(id: str, response: Response, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == id).first()
@@ -52,12 +54,14 @@ async def getUser(id: str, response: Response, db: Session = Depends(get_db)):
       raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"requested user with id {id} notfound")
     return {"data": user}
 
+# Delete user
 @app.delete("/user/{id}", tags=["users"])
 async def delete(id: str, db: Session = Depends(get_db)):
     db.query(models.User).filter(models.User.id == id).delete(synchronize_session=False)
     db.commit()
     return {"user with id": f"{id} Deleted!"}
 
+# update user
 @app.put("/user/{id}", status_code=status.HTTP_202_ACCEPTED, tags=["users"])
 async def update_user(id: str, request: schemas.User, db: Session = Depends(get_db)):
     # Get the user from the database
