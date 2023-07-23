@@ -1,8 +1,7 @@
-from fastapi import APIRouter, status, HTTPException, Depends
+from fastapi import APIRouter, status, Depends
 from sqlalchemy.orm import Session
-from app import models, schemas, database
+from app import schemas, database
 from typing import List
-import bcrypt
 from ..sql import user
 
 router = APIRouter(
@@ -21,20 +20,9 @@ async def getUser(id: str, db: Session = Depends(database.get_db)):
     return user.show(id, db)
     
 
-@router.post("/", status_code=status.HTTP_200_OK, response_model=schemas.AddUser)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.AddUser)
 async def create(request: schemas.AddUser, db: Session = Depends(database.get_db)):
-    salt = bcrypt.gensalt()
-    new_user = models.User(
-        firstname=request.firstname,
-        lastname=request.lastname,
-        phone=request.phone,
-        email=request.email,
-        password=bcrypt.hashpw(request.password.encode("utf-8"), salt)
-        )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
+    return user.create(request, db)
 
 # # update user
 @router.put("/{id}", status_code=status.HTTP_202_ACCEPTED)

@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app import models
+import bcrypt
 
 
 def get(db: Session):
@@ -14,6 +15,20 @@ def show(id: str, db):
     if not user:
       raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"requested user with id {id} notfound")
     return {"data": user}
+
+def create(request, db):
+    salt = bcrypt.gensalt()
+    new_user = models.User(
+        firstname=request.firstname,
+        lastname=request.lastname,
+        phone=request.phone,
+        email=request.email,
+        password=bcrypt.hashpw(request.password.encode("utf-8"), salt)
+        )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
 
 def update(id: str, request, db: Session):
         # Get the user from the database
