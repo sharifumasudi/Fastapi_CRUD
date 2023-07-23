@@ -34,6 +34,10 @@ class ShowUser(BaseModel):
     class Config():
         orm_mode = True
 
+class UpdateUser(ShowUser):
+    class Config():
+        orm_mode = True
+
 class RoleUser(BaseModel):
     user_id: str
     role_id: str
